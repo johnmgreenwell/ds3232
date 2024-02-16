@@ -5,15 +5,35 @@
 //
 // Arduino library for the Maxim Integrated DS3232
 // and DS3231 Real-Time Clocks.
+//
+// Edited from the original source indicated above.
+// History of changes available in git.
+// Copyright (C) 2024 by John Greenwell and licensed under
+// GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
 
 #include <DS3232RTC.h>
 
+namespace PeripheralIO
+{
+
+static constexpr uint8_t TX_BUF_SIZE = 8;
+static constexpr uint8_t RX_BUF_SIZE = 16;
+
 uint8_t DS3232RTC::errCode;
+static uint8_t tx_buf[TX_BUF_SIZE];
+static uint8_t rx_buf[RX_BUF_SIZE];
+
+DS3232RTC::DS3232RTC(uint8_t i2c_address)
+: _i2c(i2c_address)
+{
+
+};
 
 // Initialize the I2C bus.
 void DS3232RTC::begin()
 {
-    i2cBegin();
+    _i2c.init();
+    _i2c.setAddress(DS32_ADDR);
 }
 
 // Read the current time from the RTC and return it as a time_t
@@ -42,18 +62,16 @@ uint8_t DS3232RTC::set(time_t t)
 // structure. Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::read(tmElements_t &tm)
 {
-    i2cBeginTransmission(DS32_ADDR);
-    i2cWrite(DS32_SECONDS);
-    if ( uint8_t e = i2cEndTransmission() ) { errCode = e; return e; }
     // request 7 bytes (secs, min, hr, dow, date, mth, yr)
-    i2cRequestFrom(DS32_ADDR, static_cast<uint8_t>(tmNbrFields));
-    tm.Second = bcd2dec(i2cRead() & ~_BV(DS1307_CH));
-    tm.Minute = bcd2dec(i2cRead());
-    tm.Hour = bcd2dec(i2cRead() & ~_BV(DS32_HR1224));   // assumes 24hr clock
-    tm.Wday = i2cRead();
-    tm.Day = bcd2dec(i2cRead());
-    tm.Month = bcd2dec(i2cRead() & ~_BV(DS32_CENTURY)); // don't use the Century bit
-    tm.Year = y2kYearToTm(bcd2dec(i2cRead()));
+    _i2c.writeRead(DS32_SECONDS, rx_buf, static_cast<uint8_t>(tmNbrFields));
+    tm.Second = bcd2dec(rx_buf[0] & ~_BV(DS1307_CH));
+    tm.Minute = bcd2dec(rx_buf[1]);
+    tm.Hour = bcd2dec(rx_buf[2] & ~_BV(DS32_HR1224));   // assumes 24hr clock
+    tm.Wday = rx_buf[3];
+    tm.Day = bcd2dec(rx_buf[4]);
+    tm.Month = bcd2dec(rx_buf[5] & ~_BV(DS32_CENTURY)); // don't use the Century bit
+    tm.Year = y2kYearToTm(bcd2dec(rx_buf[6]));
+
     return 0;
 }
 
@@ -62,16 +80,18 @@ uint8_t DS3232RTC::read(tmElements_t &tm)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::write(tmElements_t &tm)
 {
-    i2cBeginTransmission(DS32_ADDR);
-    i2cWrite(DS32_SECONDS);
-    i2cWrite(dec2bcd(tm.Second));
-    i2cWrite(dec2bcd(tm.Minute));
-    i2cWrite(dec2bcd(tm.Hour));         // sets 24 hour format (Bit 6 == 0)
-    i2cWrite(tm.Wday);
-    i2cWrite(dec2bcd(tm.Day));
-    i2cWrite(dec2bcd(tm.Month));
-    i2cWrite(dec2bcd(tmYearToY2k(tm.Year)));
-    uint8_t ret = i2cEndTransmission();
+    uint8_t ret;
+
+    tx_buf[0] = DS32_SECONDS;
+    tx_buf[1] = dec2bcd(tm.Second);
+    tx_buf[2] = dec2bcd(tm.Minute);
+    tx_buf[3] = dec2bcd(tm.Hour);
+    tx_buf[4] = tm.Wday;
+    tx_buf[5] = dec2bcd(tm.Day);
+    tx_buf[6] = dec2bcd(tm.Month);
+    tx_buf[7] = dec2bcd(tmYearToY2k(tm.Year));
+
+    ret = _i2c.write(tx_buf, 8);
     uint8_t s = readRTC(DS32_STATUS);               // read the status register
     writeRTC( DS32_STATUS, s & ~_BV(DS32_OSF) );    // clear the Oscillator Stop Flag
     return ret;
@@ -84,10 +104,7 @@ uint8_t DS3232RTC::write(tmElements_t &tm)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 {
-    i2cBeginTransmission(DS32_ADDR);
-    i2cWrite(addr);
-    for (uint8_t i=0; i<nBytes; i++) i2cWrite(values[i]);
-    return i2cEndTransmission();
+    return _i2c.write(addr, values, nBytes);
 }
 
 // Write a single byte to RTC RAM.
@@ -95,7 +112,7 @@ uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t value)
 {
-    return ( writeRTC(addr, &value, 1) );
+    return _i2c.write(addr, value);
 }
 
 // Read multiple bytes from RTC RAM.
@@ -105,12 +122,7 @@ uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t value)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::readRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 {
-    i2cBeginTransmission(DS32_ADDR);
-    i2cWrite(addr);
-    if ( uint8_t e = i2cEndTransmission() ) return e;
-    i2cRequestFrom( (uint8_t)DS32_ADDR, nBytes );
-    for (uint8_t i=0; i<nBytes; i++) values[i] = i2cRead();
-    return 0;
+    return _i2c.writeRead(addr, values, nBytes);
 }
 
 // Read a single byte from RTC RAM.
@@ -119,7 +131,8 @@ uint8_t DS3232RTC::readRTC(uint8_t addr)
 {
     uint8_t b {0};
 
-    readRTC(addr, &b, 1);
+    _i2c.read();
+
     return b;
 }
 
@@ -272,3 +285,6 @@ uint8_t __attribute__ ((noinline)) DS3232RTC::bcd2dec(uint8_t n)
     return n - 6 * (n >> 4);
 }
 
+}
+
+// EOF

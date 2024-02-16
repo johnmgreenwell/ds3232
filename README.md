@@ -4,6 +4,9 @@ README file
 Jack Christensen  
 Mar 2013
 
+Forked from original for compatibility adaptation.
+(C) 2024 John Greenwell GNU GPL v3.0
+
 ## License
 Arduino DS3232RTC Library Copyright (C) 2018 Jack Christensen GNU GPL v3.0
 

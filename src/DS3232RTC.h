@@ -5,47 +5,27 @@
 //
 // Arduino library for the Maxim Integrated DS3232
 // and DS3231 Real-Time Clocks.
+//
+// Edited from the original source (see above).
+// History of changes available in git.
+// Copyright (C) 2024 by John Greenwell and licensed under
+// GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
+//
+// Dependencies: TimeLib.h (https://github.com/PaulStoffregen/Time)
 
 #ifndef DS3232RTC_H_INCLUDED
 #define DS3232RTC_H_INCLUDED
 
 #include <Arduino.h>
-#include <TimeLib.h>        // https://github.com/PaulStoffregen/Time
-
-// define release-independent I2C functions
-#if defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-#include <TinyWireM.h>
-#define i2cBegin TinyWireM.begin
-#define i2cBeginTransmission TinyWireM.beginTransmission
-#define i2cEndTransmission TinyWireM.endTransmission
-#define i2cRequestFrom TinyWireM.requestFrom
-#define i2cRead TinyWireM.receive
-#define i2cWrite TinyWireM.send
-#elif ARDUINO >= 100
-#include <Wire.h>
-#define i2cBegin Wire.begin
-#define i2cBeginTransmission Wire.beginTransmission
-#define i2cEndTransmission Wire.endTransmission
-#define i2cRequestFrom Wire.requestFrom
-#define i2cRead Wire.read
-#define i2cWrite Wire.write
-#else
-#include <Wire.h>
-#define i2cBegin Wire.begin
-#define i2cBeginTransmission Wire.beginTransmission
-#define i2cEndTransmission Wire.endTransmission
-#define i2cRequestFrom Wire.requestFrom
-#define i2cRead Wire.receive
-#define i2cWrite Wire.send
-#endif
+#include <TimeLib.h> 
+#include "hal.h"
 
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
 #endif
 
-#ifndef BUFFER_LENGTH       // a horrible and limiting kludge for samd (arduino zero)
-#define BUFFER_LENGTH 32
-#endif
+namespace PeripheralIO
+{
 
 class DS3232RTC
 {
@@ -131,12 +111,11 @@ class DS3232RTC
             DS32_CENTURY     {7},        // Century bit in Month register
             DS32_DYDT        {6};        // Day/Date flag bit in alarm Day/Date registers
 
-        DS3232RTC() {};
-        DS3232RTC(bool initI2C) { (void)initI2C; }  // undocumented for backward compatibility
+        DS3232RTC(uint8_t i2c_address);
         void begin();
-        static time_t get();    // static needed to work with setSyncProvider() in the Time library
+        time_t get();    // static needed to work with setSyncProvider() in the Time library
         uint8_t set(time_t t);
-        static uint8_t read(tmElements_t &tm);
+        uint8_t read(tmElements_t &tm);
         uint8_t write(tmElements_t &tm);
         uint8_t writeRTC(uint8_t addr, uint8_t* values, uint8_t nBytes);
         uint8_t writeRTC(uint8_t addr, uint8_t value);
@@ -154,8 +133,13 @@ class DS3232RTC
         static uint8_t errCode;
 
     private:
+        HAL::I2C _i2c;
         uint8_t dec2bcd(uint8_t n);
         static uint8_t bcd2dec(uint8_t n);
 };
 
+}
+
 #endif
+
+// EOF
