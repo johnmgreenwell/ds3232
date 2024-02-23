@@ -16,9 +16,8 @@
 #ifndef DS3232RTC_H_INCLUDED
 #define DS3232RTC_H_INCLUDED
 
-#include <Arduino.h>
-#include <TimeLib.h> 
 #include "hal.h"
+#include "TimeLib.h"
 
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
@@ -111,7 +110,7 @@ class DS3232RTC
             DS32_CENTURY     {7},        // Century bit in Month register
             DS32_DYDT        {6};        // Day/Date flag bit in alarm Day/Date registers
 
-        DS3232RTC(uint8_t i2c_address);
+        DS3232RTC(HAL::I2C& i2c_bus, uint8_t i2c_address);
         void begin();
         time_t get();    // static needed to work with setSyncProvider() in the Time library
         uint8_t set(time_t t);
@@ -133,7 +132,8 @@ class DS3232RTC
         static uint8_t errCode;
 
     private:
-        HAL::I2C _i2c;
+        HAL::I2C& _i2c;
+        uint8_t _i2c_addr;
         uint8_t dec2bcd(uint8_t n);
         static uint8_t bcd2dec(uint8_t n);
 };

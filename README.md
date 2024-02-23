@@ -1,4 +1,4 @@
-# Arduino DS3232RTC Library
+# Custom DS3232RTC Library
 https://github.com/JChristensen/DS3232RTC  
 README file  
 Jack Christensen  
@@ -8,7 +8,7 @@ Forked from original for compatibility adaptation.
 (C) 2024 John Greenwell GNU GPL v3.0
 
 ## License
-Arduino DS3232RTC Library Copyright (C) 2018 Jack Christensen GNU GPL v3.0
+Custom DS3232RTC Library Copyright (C) 2018 Jack Christensen GNU GPL v3.0
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License v3.0 as published by the Free Software Foundation.
 
@@ -27,7 +27,7 @@ The 2.0.0 version of the library has some significant changes and is not complet
  - The example sketches and documentation have been updated to reflect these changes.
 
 ## Introduction
-**DS3232RTC** is an Arduino library that supports the Maxim Integrated DS3231 and DS3232 Real-Time Clocks. This library is intended to be used with [PJRC's Arduino Time library](https://github.com/PaulStoffregen/Time).
+**DS3232RTC** is a custom library that supports the Maxim Integrated DS3231 and DS3232 Real-Time Clocks. This library is intended to be used with [PJRC's Arduino Time library](https://github.com/PaulStoffregen/Time).
 
 The **DS3232RTC** library also implements functions to support the additional features of the DS3232 and DS3231. The DS3232 has the same features as the DS3231, but the DS3232 also has these extra features:
 
@@ -40,7 +40,7 @@ The **DS3232RTC** library also implements functions to support the additional fe
 The following example sketches are included with the **DS3232RTC** library:
 
 - **TimeRTC:** A simple example to display the time and date.
-- **SetSerial:** Set the RTC's date and time from the Arduino serial monitor. Displays date, time and temperature.
+- **SetSerial:** Set the RTC's date and time from the serial monitor. Displays date, time and temperature.
 - **rtcTimeTemp:** Displays time and temperature.
 - **rtc_temperature:** Displays time and temperature but initiates a temperature conversion every 10 seconds in addition to the RTC's default conversion period of 64 seconds.
 - **rtc_interrupt:** Uses a 1Hz interrupt from the RTC to keep time.

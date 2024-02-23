@@ -10,8 +10,10 @@
 // History of changes available in git.
 // Copyright (C) 2024 by John Greenwell and licensed under
 // GNU GPL v3.0, https://www.gnu.org/licenses/gpl.html
+//
+// Dependencies: TimeLib.h (https://github.com/PaulStoffregen/Time)
 
-#include <DS3232RTC.h>
+#include "ds3232rtc.h"
 
 namespace PeripheralIO
 {
@@ -23,17 +25,18 @@ uint8_t DS3232RTC::errCode;
 static uint8_t tx_buf[TX_BUF_SIZE];
 static uint8_t rx_buf[RX_BUF_SIZE];
 
-DS3232RTC::DS3232RTC(uint8_t i2c_address)
-: _i2c(i2c_address)
+DS3232RTC::DS3232RTC(HAL::I2C& i2c_bus, uint8_t i2c_address)
+: _i2c(i2c_bus)
+, _i2c_addr(i2c_address)
 {
 
 };
 
-// Initialize the I2C bus.
+// Initialize the DS3232RTC.
 void DS3232RTC::begin()
 {
     _i2c.init();
-    _i2c.setAddress(DS32_ADDR);
+    _i2c.setAddress(_i2c_addr);
 }
 
 // Read the current time from the RTC and return it as a time_t
