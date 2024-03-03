@@ -35,8 +35,7 @@ DS3232RTC::DS3232RTC(HAL::I2C& i2c_bus, uint8_t i2c_address)
 // Initialize the DS3232RTC.
 void DS3232RTC::begin()
 {
-    _i2c.init();
-    _i2c.setAddress(_i2c_addr);
+    // Currently empty
 }
 
 // Read the current time from the RTC and return it as a time_t
@@ -66,7 +65,7 @@ uint8_t DS3232RTC::set(time_t t)
 uint8_t DS3232RTC::read(tmElements_t &tm)
 {
     // request 7 bytes (secs, min, hr, dow, date, mth, yr)
-    _i2c.writeRead(DS32_SECONDS, rx_buf, static_cast<uint8_t>(tmNbrFields));
+    _i2c.writeRead(DS32_ADDR, DS32_SECONDS, rx_buf, static_cast<uint8_t>(tmNbrFields));
     tm.Second = bcd2dec(rx_buf[0] & ~_BV(DS1307_CH));
     tm.Minute = bcd2dec(rx_buf[1]);
     tm.Hour = bcd2dec(rx_buf[2] & ~_BV(DS32_HR1224));   // assumes 24hr clock
@@ -94,7 +93,7 @@ uint8_t DS3232RTC::write(tmElements_t &tm)
     tx_buf[6] = dec2bcd(tm.Month);
     tx_buf[7] = dec2bcd(tmYearToY2k(tm.Year));
 
-    ret = _i2c.write(tx_buf, 8);
+    ret = _i2c.write(DS32_ADDR, tx_buf, 8);
     uint8_t s = readRTC(DS32_STATUS);               // read the status register
     writeRTC( DS32_STATUS, s & ~_BV(DS32_OSF) );    // clear the Oscillator Stop Flag
     return ret;
@@ -107,7 +106,7 @@ uint8_t DS3232RTC::write(tmElements_t &tm)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 {
-    return _i2c.write(addr, values, nBytes);
+    return _i2c.write(DS32_ADDR, addr, values, nBytes);
 }
 
 // Write a single byte to RTC RAM.
@@ -115,7 +114,7 @@ uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t value)
 {
-    return _i2c.write(addr, value);
+    return _i2c.write(DS32_ADDR, addr, value);
 }
 
 // Read multiple bytes from RTC RAM.
@@ -125,7 +124,7 @@ uint8_t DS3232RTC::writeRTC(uint8_t addr, uint8_t value)
 // Returns the I2C status (zero if successful).
 uint8_t DS3232RTC::readRTC(uint8_t addr, uint8_t* values, uint8_t nBytes)
 {
-    return _i2c.writeRead(addr, values, nBytes);
+    return _i2c.writeRead(DS32_ADDR, addr, values, nBytes);
 }
 
 // Read a single byte from RTC RAM.
@@ -134,7 +133,7 @@ uint8_t DS3232RTC::readRTC(uint8_t addr)
 {
     uint8_t b {0};
 
-    _i2c.read();
+    b = _i2c.read(DS32_ADDR);
 
     return b;
 }
