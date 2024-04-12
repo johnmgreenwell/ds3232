@@ -112,7 +112,7 @@ class DS3232RTC
 
         DS3232RTC(HAL::I2C& i2c_bus, uint8_t i2c_address);
         void begin();
-        time_t get();    // static needed to work with setSyncProvider() in the Time library
+        time_t get();
         uint8_t set(time_t t);
         uint8_t read(tmElements_t &tm);
         uint8_t write(tmElements_t &tm);

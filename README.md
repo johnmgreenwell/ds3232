@@ -4,8 +4,19 @@ README file
 Jack Christensen  
 Mar 2013
 
-Forked from original for compatibility adaptation.
+Forked from original for custom HAL compatibility adaptation.
 (C) 2024 John Greenwell GNU GPL v3.0
+
+## Usage
+
+For this modified version, the following hardware abstraction layer (HAL) requirements must be satisfied:
+
+* A header file `hal.h` providing access to HAL classes and methods.
+* An `I2C` class within the `HAL` namespace with the following methods:
+  - Write two bytes to the device (a register and data to place there): `write(uint8_t device_address, uint8_t register, uint8_t data_to_write)`.
+  - Write n bytes to the device: `write(uint8_t device_address, uint8_t * data_buffer, uint32_t length_in_bytes)`.
+  - Write n bytes to the device after specifying register (write the register value, then write n bytes): `write(uint8_t device_address, uint8_t register, uint8_t * data_buffer, uint32_t length_in_bytes)`.
+  - Write one byte to the device, execute a repeated start, then read n bytes from the device: `writeRead(uint8_t device_address, uint8_t register, uint8_t * data_buffer, uint32_t length_in_bytes)`.
 
 ## License
 Custom DS3232RTC Library Copyright (C) 2018 Jack Christensen GNU GPL v3.0

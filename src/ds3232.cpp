@@ -13,7 +13,7 @@
 //
 // Dependencies: TimeLib.h (https://github.com/PaulStoffregen/Time)
 
-#include "ds3232rtc.h"
+#include "ds3232.h"
 
 namespace PeripheralIO
 {
@@ -133,7 +133,7 @@ uint8_t DS3232RTC::readRTC(uint8_t addr)
 {
     uint8_t b {0};
 
-    b = _i2c.read(DS32_ADDR);
+    _i2c.writeRead(DS32_ADDR, addr, &b, 1);
 
     return b;
 }
