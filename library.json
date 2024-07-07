@@ -11,7 +11,7 @@
     "frameworks": "*",
     "platforms": "*",
     "dependencies": {
-        "Time": "https://github.com/PaulStoffregen/Time/tree/a18e50dcea4ee17285d732d39e7bc559482d1d3d"
+        "Time": "https://github.com/PaulStoffregen/Time.git#1.6.1"
     },
     "build": {
         "flags": [
